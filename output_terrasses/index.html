@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartographie des Terrasses - PNR Mont-Ventoux</title>
+
+    <!-- Fonts (Academic & Modern) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+</head>
+
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="loading-text"
+            style="font-weight: 500; letter-spacing: 0.5px; font-family: 'Playfair Display', serif; font-style: italic;">
+            Initialisation de la Cartographie...</div>
+    </div>
+
+    <!-- 1. HEADER (Navigation) -->
+    <header>
+        <div class="brand">
+            <span class="brand-title">Cartographie des terrasses</span>
+            <span class="brand-subtitle">PNR Mont-Ventoux</span>
+        </div>
+        <div style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--color-ink-sub);">
+            Analyse morphologique LiDAR HD
+        </div>
+    </header>
+
+    <!-- 2. MAIN (Map + Overlay) -->
+    <main>
+
+        <!-- MAP CONTAINER -->
+        <div id="map-container">
+            <div id="map"></div>
+
+            <!-- Map Legend (Overlay) -->
+            <div class="map-legend">
+                <div class="legend-header">Typologie</div>
+                <div class="legend-row">
+                    <div class="legend-swatch" style="background:var(--color-data-mur);"></div>
+                    <span class="legend-text"><strong>Mur</strong> (forte pente)</span>
+                </div>
+                <div class="legend-row">
+                    <div class="legend-swatch" style="background:var(--color-data-terrasse);"></div>
+                    <span class="legend-text"><strong>Terrasse</strong> (zone plane)</span>
+                </div>
+                <!-- PNR -->
+                <div class="legend-row">
+                    <div class="legend-swatch"
+                        style="background:rgba(44, 62, 80, 0.05); border: 2px dashed #2c3e50; box-sizing: border-box;">
+                    </div>
+                    <span class="legend-text"><strong>Emprise PNR</strong></span>
+                </div>
+                <div
+                    style="margin-top:8px; font-size: 0.75rem; color: #888; border-top: 1px solid #eee; padding-top: 6px;">
+                    Seuil vertical : 0.7m
+                </div>
+            </div>
+        </div>
+
+        <!-- FLOATING SIDEBAR (Glass Panel) -->
+        <aside id="floating-panel">
+
+            <!-- Abstract -->
+            <div style="margin-bottom: 20px;">
+
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-group">
+                <div class="kpi-card">
+                    <span class="kpi-value" id="kpi-total">-</span>
+                    <span class="kpi-label">Objets détectés</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-value" id="kpi-length">-</span>
+                    <span class="kpi-label">Linéaire (km)</span>
+                </div>
+            </div>
+            <div class="kpi-card" style="border-top: 1px solid var(--color-border); padding-top: 15px;">
+                <span class="kpi-value" id="kpi-surface">-</span>
+                <span class="kpi-label">Surface murée (m²)</span>
+            </div>
+
+            <!-- Actions -->
+            <div class="btn-group" style="margin-top: auto;">
+                <h3 class="section-title">Exploration</h3>
+                <button id="btn-methodo" class="btn-action">Note méthodologique</button>
+                <button id="btn-show-pie" class="btn-action">
+                    Distribution des classes
+                    <span class="btn-subtitle">Highcharts</span>
+                </button>
+                <button id="btn-show-scatter" class="btn-action">
+                    Diagramme de dispersion
+                    <span class="btn-subtitle">Highcharts</span>
+                </button>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- 3. GLOBAL FOOTER (Fixed Bottom) -->
+    <footer id="global-footer">
+        <div>
+            <strong>Source :</strong> IGN LiDAR HD 2024
+        </div>
+        <div>
+            <strong>Réalisation :</strong> Fabien Rives - M2GEOTER - 2026
+        </div>
+    </footer>
+
+    <!-- MODALS -->
+
+    <!-- Methodo Modal -->
+    <div id="modal-methodo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2
+                style="font-size: 2rem; margin-bottom: 30px; border-bottom: 2px solid var(--color-accent-main); padding-bottom: 15px;">
+                Protocole méthodologique
+            </h2>
+
+            <div class="step">
+                <h3>1. Acquisition et prétraitement</h3>
+                <ul style="margin-left: 20px; color: var(--color-ink-sub); margin-top: 8px; line-height: 1.6;">
+                    <li><strong>La Source :</strong> Utilisation des données "LiDAR HD" de l'IGN qui cartographie le
+                        planimétrique et l'altimétrique avec une précision extrême.</li>
+                    <li><strong>Le Volume :</strong> Traitement de 1 520 fichiers (dalles) couvrant 1 500 km², pour un
+                        total de 17 Go de données brutes.</li>
+                    <li><strong>Le Résultat :</strong> Création d'une carte de relief numérique (MNT) ultra-précise (50
+                        cm par pixel), indispensable pour voir les murets cachés sous la végétation.</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h3>2. Segmentation morphologique</h3>
+                <ul style="margin-left: 20px; color: var(--color-ink-sub); margin-top: 8px; line-height: 1.6;">
+                    <li><strong>Calcul de la Pente :</strong> L'algorithme analyse chaque pixel pour quantifier
+                        l'inclinaison du terrain.</li>
+                    <li><strong>Détection des Ruptures :</strong> On ne conserve que les zones où la pente est forte (>
+                        15°).</li>
+                    <li><strong>Pourquoi ?</strong> Cela permet d'isoler les ruptures topographiques (talus, murets) du
+                        modelé naturel des versants.</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h3>3. Vectorisation et post-traitement</h3>
+                <p>Une fois les zones de rupture identifiées, elles sont transformées en entités vectorielles pour être
+                    analysées :</p>
+                <ul style="margin-left: 20px; color: var(--color-ink-sub); margin-top: 15px; line-height: 1.8;">
+                    <li><strong>1. Vectorisation :</strong> Conversion des pixels détectés en géométries vectorielles
+                        (lignes et polygones).</li>
+                    <li><strong>2. Filtrage :</strong> Suppression des éléments trop petits (< 20 m²) qui correspondent
+                            souvent à du bruit ou des rochers isolés.</li>
+                    <li><strong>3. Lissage Morphologique :</strong> Unification des formes pour restituer une courbure
+                        naturelle, en comblant les discontinuités et en adoucissant les angles.</li>
+                    <li><strong>4. Réassemblage :</strong> Fusion des segments fragmentés par le découpage initial des
+                        dalles pour reconstituer les ouvrages continus.</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h3>4. Classification sémantique</h3>
+                <p>Cette étape permet de distinguer les simples murets des véritables terrasses de culture :</p>
+                <ul style="margin-left: 20px; color: var(--color-ink-sub); margin-top: 15px; line-height: 1.8;">
+                    <li><strong>La méthode du Profil :</strong> L'algorithme analyse l'altitude du terrain de part et
+                        d'autre de l'objet détecté.</li>
+                    <li><strong>Cas 1 : Le Mur (Obstacle) :</strong> Le profil altimétrique montre une élévation
+                        ponctuelle (le mur) sans changement majeur du niveau du sol environnant.</li>
+                    <li><strong>Cas 2 : La Terrasse (Soutènement) :</strong> Le profil révèle une différence de niveau
+                        marquée entre l'amont et l'aval (> 70cm), caractéristique d'une zone plane retenue par un
+                        ouvrage.</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h3>5. Analyse morphométrique</h3>
+                <p>Le tableau de bord intègre des indicateurs morphométriques avancés, dont l'<strong>Indice de
+                        compacité
+                        de Gravelius</strong> :
+                    <span class="math-formula">
+                        K<sub>G</sub> = <span class="fraction"><span class="num">P</span><span class="denom">2
+                                &radic;<span class="radicand">&pi; A</span></span></span>
+                    </span>.
+                    <br><em>Avec :</em>
+                <ul
+                    style="margin-top: 5px; margin-bottom: 10px; list-style-type: none; padding-left: 10px; color: var(--color-ink-sub);">
+                    <li><span class="math-formula" style="margin-right:5px;">K<sub>G</sub></span> = Indice de compacité
+                        de Gravelius</li>
+                    <li><span class="math-formula" style="margin-right:5px;">P</span> = Périmètre de la surface</li>
+                    <li><span class="math-formula" style="margin-right:5px;">A</span> = Aire de l'objet</li>
+                </ul>
+                Cet indice quantifie le degré d'élongation des structures, offrant une clé de lecture sur leur typologie
+                architecturale et leur état de conservation.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Modal -->
+    <div id="modal-pie" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-pie">&times;</span>
+            <h2 style="text-align: center; margin-bottom: 20px;">Répartition des classes</h2>
+            <div id="chart-pie" style="height: 400px;"></div>
+        </div>
+    </div>
+
+    <!-- Scatter Modal -->
+    <div id="modal-scatter" class="modal">
+        <div class="modal-content" style="width: 90%; max-width: 1400px; height: 80vh;">
+            <span class="close-scatter">&times;</span>
+            <h2 style="margin-bottom: 20px;">Relation emprise / compacité (Gravelius)</h2>
+            <div id="chart-scatter" style="height: calc(100% - 60px);"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Init ---
+        proj4.defs("EPSG:2154", "+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+
+        // --- Modals Logic ---
+        const setupModal = (btnId, modalId, closeClass) => {
+            const btn = document.getElementById(btnId);
+            const modal = document.getElementById(modalId);
+            const closeBtn = document.querySelector('.' + closeClass);
+
+            if (btn && modal) {
+                btn.onclick = () => {
+                    modal.style.display = "block";
+                    window.dispatchEvent(new Event('resize')); // Trigger Highcharts redraw
+                }
+            }
+            if (closeBtn && modal) {
+                closeBtn.onclick = () => modal.style.display = "none";
+            }
+        };
+
+        setupModal("btn-methodo", "modal-methodo", "close");
+        setupModal("btn-show-pie", "modal-pie", "close-pie");
+        setupModal("btn-show-scatter", "modal-scatter", "close-scatter");
+
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        };
+
+        // --- Highcharts Key Theme (Scientific) ---
+        Highcharts.theme = {
+            colors: ['#f39c12', '#3498db', '#95a5a6', '#34495e'],
+            chart: {
+                backgroundColor: 'transparent',
+                style: { fontFamily: "'Inter', sans-serif" }
+            },
+            title: {
+                style: {
+                    color: '#1a1a1a',
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '20px',
+                    fontWeight: '700'
+                }
+            },
+            legend: {
+                itemStyle: { color: '#666', fontFamily: "'Inter', sans-serif" },
+                itemHoverStyle: { color: '#000' }
+            },
+            xAxis: {
+                gridLineColor: '#f0f0f0',
+                labels: { style: { color: '#666' } },
+                lineColor: '#ddd',
+                tickColor: '#ddd'
+            },
+            yAxis: {
+                gridLineColor: '#f0f0f0',
+                labels: { style: { color: '#666' } },
+                title: { style: { color: '#666' } }
+            },
+            tooltip: {
+                backgroundColor: '#ffffff',
+                style: { color: '#333', fontFamily: "'Inter', sans-serif" },
+                borderWidth: 1,
+                borderColor: '#e0e0e0',
+                shadow: true
+            },
+            plotOptions: {
+                series: {
+                    animation: { duration: 1000 }
+                }
+            }
+        };
+        Highcharts.setOptions(Highcharts.theme);
+
+
+        // --- MAP & DATA ---
+        var map = L.map('map', { zoomControl: false }).setView([44.1, 5.2], 11); // Zoom control moved or custom
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Fond de plan (Positron - OSM Light neutre)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        const geojsonPath = 'terrasses.geojson';
+        let geojsonLayer;
+
+        // Custom Spinner
+        const loadingDiv = document.getElementById('loading');
+
+        // Data Arrays for Charts
+        let categories = { "Terrasse": 0, "Mur": 0 };
+        let scatterDataMur = [];
+        let scatterDataTerrasse = [];
+
+        // CHARGEMENT PARALLÈLE (Emprise + Données)
+        Promise.all([
+            fetch('emprise.geojson').then(r => r.ok ? r.json() : null).catch(e => null),
+            fetch('terrasses.geojson').then(r => r.ok ? r.json() : null).catch(e => null)
+        ]).then(([empriseData, data]) => {
+
+            // 1. GESTION EMPRISE PNR (Fond)
+            var layerEmprise = null;
+            if (empriseData) {
+                layerEmprise = L.geoJSON(empriseData, {
+                    style: { color: '#2c3e50', weight: 2, dashArray: '5, 10', fillOpacity: 0.05, fillColor: '#2c3e50' }
+                });
+                layerEmprise.addTo(map);
+            }
+
+            // 2. GESTION TERRASSES (Données)
+            if (data) {
+                console.log("Données chargées :", data.features.length, "objets");
+                // Update KPIs
+                let totalCount = data.features.length;
+                let totalLength = 0; // en m
+                let totalAreaMurs = 0; // en m²
+
+                data.features.forEach(f => {
+                    const props = f.properties;
+                    const isMur = (props.t === 0); // 0=Mur, 1=Terrasse
+                    const typeLabel = isMur ? "Mur" : "Terrasse";
+
+                    // Stats
+                    totalLength += (props.p || 0);
+                    if (isMur) totalAreaMurs += (props.a || 0);
+                    categories[typeLabel]++;
+
+                    // Scatter Data (Area vs Compactness)
+                    // x = Area (a), y = Gravelius (gc)
+                    // On limite le nombre de points pour la perf si nécessaire
+                    if (props.a < 5000) { // Filtre visuel
+                        let point = { x: props.a, y: props.gc, name: `ID: ${props.id || '?'}` };
+                        if (isMur) scatterDataMur.push(point);
+                        else scatterDataTerrasse.push(point);
+                    }
+                });
+
+                // Update DOM KPIs
+
+                document.getElementById('kpi-total').textContent = totalCount.toLocaleString();
+                document.getElementById('kpi-length').textContent = Math.round(totalLength / 1000).toLocaleString();
+                document.getElementById('kpi-surface').textContent = Math.round(totalAreaMurs).toLocaleString();
+
+                // Style Function
+                function style(feature) {
+                    const isMur = feature.properties.t === 0;
+                    const colorParams = isMur ? { c: '#d35400', w: 1.5 } : { c: '#2980b9', w: 1.0 };
+                    return {
+                        fillColor: colorParams.c,
+                        weight: colorParams.w,
+                        opacity: 1,
+                        color: colorParams.c, // Stroke = Fill (Dilatation visuelle)
+                        dashArray: '',
+                        fillOpacity: 1.0 // Solid color
+                    };
+                }
+
+                function onEachFeature(feature, layer) {
+                    const props = feature.properties;
+                    const typeStr = (props.t === 0) ? "Mur" : "Terrasse";
+                    const tooltipContent = `
+                        <div style="font-family: 'Inter', sans-serif; padding: 5px;">
+                            <strong style="color: #2c3e50;">${typeStr}</strong><br>
+                            Surface: ${props.a} m²<br>
+                            Compacité (Gravelius): ${props.gc}
+                        </div>
+                    `;
+                    layer.bindTooltip(tooltipContent, { sticky: true, direction: "top" });
+
+                    layer.on({
+                        mouseover: function (e) {
+                            var layer = e.target;
+                            layer.setStyle({ weight: 2, color: '#2c3e50', fillOpacity: 1 });
+                            layer.bringToFront();
+                        },
+                        mouseout: function (e) {
+                            geojsonLayer.resetStyle(e.target);
+                        }
+                    });
+                }
+
+
+
+
+                // CREATION DES CALQUES SEPARES
+                var layerTerrasses = L.geoJSON(data, {
+                    filter: function (feature) { return feature.properties.t === 1; },
+                    style: style,
+                    onEachFeature: onEachFeature
+                });
+
+                var layerMurs = L.geoJSON(data, {
+                    filter: function (feature) { return feature.properties.t === 0; },
+                    style: style,
+                    onEachFeature: onEachFeature
+                });
+
+                // Ajout par défaut
+                layerTerrasses.addTo(map);
+                layerMurs.addTo(map);
+
+                // CONTROLE DES COUCHES
+                var overlayMaps = {
+                    "<span style='color:#2980b9; font-weight:bold'>Terrasses</span>": layerTerrasses,
+                    "<span style='color:#d35400; font-weight:bold'>Murs / Pierriers</span>": layerMurs
+                };
+
+                L.control.layers(null, overlayMaps, { collapsed: false, position: 'topright' }).addTo(map);
+
+                // Zoom sur l'ensemble
+                var group = new L.featureGroup([layerTerrasses, layerMurs]);
+                if (group.getBounds().isValid()) {
+                    map.fitBounds(group.getBounds());
+                }
+
+
+
+                // --- CHARTS GENERATION ---
+
+                // 1. Pie Chart
+                Highcharts.chart('chart-pie', {
+                    chart: { type: 'pie' },
+                    title: { text: null },
+                    plotOptions: {
+                        pie: {
+                            innerSize: '60%', // Donut
+                            dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.percentage:.1f} %' },
+                            colors: ['#d35400', '#2980b9'] // Mur, Terrasse
+                        }
+                    },
+                    series: [{
+                        name: 'Objets',
+                        data: [
+                            { name: 'Murs', y: categories['Mur'] },
+                            { name: 'Terrasses', y: categories['Terrasse'] }
+                        ]
+                    }]
+                });
+
+
+                // 2. Scatter Chart (INSIDE the fetch to wait for data)
+                Highcharts.chart('chart-scatter', {
+                    chart: { type: 'scatter', zoomType: 'xy' },
+                    title: { text: null },
+                    xAxis: {
+                        title: { enabled: true, text: 'Surface (m²)' },
+                        startOnTick: true, endOnTick: true, showLastLabel: true
+                    },
+                    yAxis: { title: { text: 'Indice de Gravelius (1 = cercle)' } },
+                    legend: { layout: 'vertical', align: 'left', verticalAlign: 'top', x: 70, y: 10, floating: true, backgroundColor: Highcharts.defaultOptions.chart.backgroundColor, borderWidth: 1 },
+                    plotOptions: {
+                        scatter: {
+                            marker: { radius: 2.5, states: { hover: { enabled: true, lineColor: 'rgb(100,100,100)' } } },
+                            states: { hover: { marker: { enabled: false } } },
+                            tooltip: { headerFormat: '<b>{series.name}</b><br>', pointFormat: '{point.x} m², GC: {point.y}' }
+                        }
+                    },
+                    series: [
+                        { name: 'Murs', color: 'rgba(211, 84, 0, 0.6)', data: scatterDataMur },
+                        { name: 'Terrasses', color: 'rgba(41, 128, 185, 0.6)', data: scatterDataTerrasse }
+                    ]
+                });
+
+            } else {
+                alert("Erreur chargement 'terrasses.geojson'.");
+            }
+
+            // Hide Loader
+            loadingDiv.style.opacity = '0';
+            setTimeout(() => loadingDiv.style.display = 'none', 500);
+
+        }).catch(err => {
+            console.error("Erreur globale :", err);
+            loadingDiv.innerHTML = "<p style='color:white'>Erreur critique.<br>" + err + "</p>";
+        });
+
+
+    </script>
+</body>
+
+</html>

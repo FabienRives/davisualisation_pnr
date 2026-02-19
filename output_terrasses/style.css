@@ -1,0 +1,481 @@
+:root {
+    /* --- PALETTE "ENCRE & PAPIER" (PREMIUM) --- */
+    --color-paper: #f8f7f2;
+    /* Crème "Papier d'Art", très doux */
+    --color-surface: #ffffff;
+    /* Blanc pur structurel (Cards, Modals) */
+    --color-ink-primary: #1a1a1a;
+    /* Noir profond (Titres) */
+    --color-ink-body: #2c2c2c;
+    /* Anthracite (Corps de texte) */
+    --color-ink-sub: #666666;
+    /* Gris moyen (Métadonnées) */
+    --color-border: #e0e0e0;
+    /* Gris perle fin */
+
+    /* --- ACCENTS (DATA-JOURNALISME) --- */
+    --color-accent-main: #2c3e50;
+    /* Bleu Nuit (Autorité) */
+    --color-accent-sub: #7f8c8d;
+    /* Gris Bleu (Secondaire) */
+
+    /* --- DATA COLORS (Haute Visibilité) --- */
+    --color-data-mur: #d35400;
+    /* Terracotta/Rouge Brique (Murs) */
+    --color-data-terrasse: #2980b9;
+    /* Bleu Ardoise (Terrasses) */
+
+    /* --- TYPOGRAPHIE --- */
+    --font-serif: 'Playfair Display',
+        serif;
+    /* Titres, Chiffres clés */
+    --font-sans: 'Inter',
+        sans-serif;
+    /* UI, Légendes, Textes longs */
+
+    /* --- METRIQUES --- */
+    --header-height: 60px;
+    --footer-height: 40px;
+    --sidebar-width: 320px;
+    --radius-md: 6px;
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+    /* Ombre portée diffuse */
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* --- RESET --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-body);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- TYPOGRAPHIE GENERIQUE --- */
+h1,
+h2,
+h3 {
+    font-family: var(--font-serif);
+    color: var(--color-ink-primary);
+    font-weight: 700;
+}
+
+strong {
+    font-weight: 600;
+    color: var(--color-ink-primary);
+}
+
+/* --- LAYOUT GLOBAL --- */
+
+/* 1. HEADER (Minimaliste) */
+header {
+    height: var(--header-height);
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    z-index: 50;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.brand-title {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: var(--color-ink-primary);
+    letter-spacing: -0.01em;
+}
+
+.brand-subtitle {
+    font-size: 0.8rem;
+    color: var(--color-accent-sub);
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 1px solid var(--color-border);
+    display: inline-block;
+    line-height: 1.2;
+}
+
+/* 2. MAIN CONTAINER (Map + Sidebar) */
+main {
+    flex: 1;
+    position: relative;
+    /* Pour positionner la sidebar en absolute */
+    overflow: hidden;
+}
+
+/* 3. MAP (Plein écran) */
+#map-container {
+    width: 100%;
+    height: 100%;
+    background: #eef2f3;
+    /* Fond neutre */
+    z-index: 1;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* 4. SIDEBAR FLOTTANTE (Glass-like) */
+#floating-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: var(--sidebar-width);
+    max-height: calc(100% - 40px);
+    background: rgba(255, 255, 255, 0.95);
+    /* Semi-transparent */
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    padding: 24px;
+    z-index: 2000;
+    /* Au-dessus de la map */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* KPI SECTIONS */
+.kpi-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.kpi-card {
+    text-align: center;
+}
+
+.kpi-value {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--color-ink-primary);
+    margin-bottom: 4px;
+}
+
+.kpi-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-ink-sub);
+}
+
+/* BUTTONS */
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: var(--color-ink-primary);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-border);
+    display: inline-block;
+    width: 100%;
+}
+
+.btn-action {
+    background: #ffffff;
+    /* Fond blanc pour lisibilité */
+    border: 1px solid #bdc3c7;
+    /* Bordure plus visible */
+    color: var(--color-ink-primary);
+    /* Texte noir */
+    padding: 12px;
+    /* Un peu plus grand */
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    /* Plus gras */
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.btn-subtitle {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--color-ink-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.btn-action:hover {
+    background: #f8f9fa;
+    border-color: var(--color-accent-main);
+    color: var(--color-accent-main);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action:hover .btn-subtitle {
+    color: var(--color-accent-main);
+}
+
+/* Primary Button (Methodo) - DOIT RESSORTIR */
+#btn-methodo {
+    background: var(--color-accent-main);
+    color: #fff;
+    border: 1px solid var(--color-accent-main);
+    font-weight: 600;
+    /* Plus gras */
+    letter-spacing: 0.5px;
+    /* Plus aéré */
+    font-size: 0.95rem;
+    padding: 14px;
+    /* Plus imposant */
+    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    /* Ombre marquée */
+    margin-bottom: 16px;
+    /* Séparation accrue */
+    text-transform: uppercase;
+    /* Pour vraiment ressortir (optionnel mais efficace) */
+    font-size: 0.85rem;
+    /* Ajusté pour l'uppercase */
+}
+
+#btn-methodo:hover {
+    background: #1a252f;
+    /* Plus sombre au survol */
+    border-color: #1a252f;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(44, 62, 80, 0.4);
+}
+
+/* ABSTRACT */
+.abstract {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--color-ink-sub);
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    line-height: 1.5;
+}
+
+/* 5. LEGEND (Style unifié avec Sidebar) */
+.map-legend {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    z-index: 2000;
+    /* Au-dessus de la map (Leaflet = 400-1000) */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.legend-header {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    color: var(--color-ink-primary);
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+/* 6. FOOTER GLOBAL (Bandeau Noir) */
+footer#global-footer {
+    height: var(--footer-height);
+    background: #111;
+    /* Noir quasi pur */
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 0.8rem;
+    z-index: 100;
+}
+
+footer#global-footer strong {
+    color: #fff;
+    font-weight: 500;
+}
+
+/* 7. MODALS (Overlay immersif) */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.90);
+    /* Fond blanc très opaque */
+    backdrop-filter: blur(5px);
+    z-index: 3000;
+    /* Au-dessus de la sidebar (2000) */
+}
+
+.modal-content {
+    background: var(--color-surface);
+    margin: 5% auto;
+    padding: 40px;
+    width: 60%;
+    max-width: 800px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-md);
+    position: relative;
+    border: 1px solid var(--color-border);
+    max-height: 85vh;
+    /* Limite la hauteur à 85% de l'écran */
+    overflow-y: auto;
+    /* Active le scroll vertical */
+}
+
+/* ESPACEMENT LISTES METHODOLOGIE */
+.step ul li {
+    margin-bottom: 15px;
+    padding-left: 5px;
+}
+
+.close,
+.close-pie,
+.close-scatter {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--color-ink-sub);
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--color-data-mur);
+}
+
+/* LOADING */
+#loading {
+    position: fixed;
+    inset: 0;
+    background: var(--color-paper);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: var(--color-ink-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Methodo Steps */
+.step {
+    margin-bottom: 24px;
+}
+
+.step h3 {
+    font-size: 1.1rem;
+    color: var(--color-accent-main);
+    margin-bottom: 4px;
+}
+
+.step p {
+    color: var(--color-ink-body);
+}
+
+/* --- MATH FORMULAS --- */
+.math-formula {
+    font-family: 'Times New Roman', Times, serif;
+    font-style: italic;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    color: var(--color-ink-primary);
+}
+
+
+.fraction {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 4px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.fraction .num {
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    display: block;
+    line-height: 1;
+    /* Évite les espacements indésirables */
+}
+
+.fraction .denom {
+    padding-top: 2px;
+    display: block;
+    line-height: 1;
+}
+
+.radicand {
+    text-decoration: none;
+    /* Correction bug double trait */
+    border-top: 1px solid currentColor;
+    display: inline-block;
+    padding-top: 2px;
+    margin-left: -1px;
+}

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large Data Files (Ignored)
+*.tif
+*.tiff
+*.gpkg
+*.img
+*.las
+*.laz
+
+# Intermediate Code Outputs
+output_terrasses/pente.tif
+output_terrasses/ruptures_pente.tif
+output_terrasses/MNT_PNR_fusionne.tif
+# We keep the final geojson and web files
+# output_terrasses/terrasses.geojson  <-- Keep (2.7MB)
+# output_terrasses/emprise.geojson    <-- Keep (5KB)
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
